@@ -1,0 +1,36 @@
+# comp2811_ll16kdt
+
+Repository for comp2811_User Interfaces
+
+== example
+
+This program prints the letters H, e, l, ... l, d, \n to the standard output,
+then quits. Read in order, the letters form a greeting. The purpose of this
+program is to provide a working example for the structure of an assignment
+submission. Submissions enclose
+
+- a README file
+- some source code
+- a Makefile
+
+and must work on the compsoc machines.
+
+== Build instructions etc.
+
+Type
+
+$ make
+
+in the directory containting this README file. This will create a new file
+containing the java byte code. The command
+
+$ ls -lt
+
+will list all files contained in this directory, ordered by modification time.
+note the newly created file "example".
+
+== Usage
+
+Run the program with
+
+$ ./example
