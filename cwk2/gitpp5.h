@@ -1,6 +1,29 @@
 #ifndef GITPP_H
 #define GITPP_H
 
+/* changelog
+ *
+ * gittp0
+ * - initial release
+ *
+ * gitpp1
+ * - add access to commit message
+ *
+ * gitpp2
+ * - fix a branch iterator bug
+ *
+ * gitpp3
+ * - allow iterating commits in empty repository
+ *     (this breaks the convention in other git tools...)
+ *
+ * gitpp4
+ * - COMMITS::create()
+ * - REPO constructor take path argument
+ *
+ * gitpp5
+ * - remove bogus trace.h include.
+ */
+
 #include <git2/repository.h>
 #include <git2/annotated_commit.h>
 #include <git2/errors.h>
@@ -13,12 +36,13 @@
 #include <git2/config.h>
 #include <git2/refs.h>
 #include <git2/checkout.h>
+#include <git2/signature.h>
+#include <git2/index.h>
 
 #include <assert.h>
 #include <string> // std::to_string
 #include <vector> // std::to_string
 
-// #include "trace.h"
 #define untested()
 #define incomplete() ( \
     std::cerr << "@@#\n@@@\nincomplete:" \
@@ -139,7 +163,7 @@ std::ostream& operator<< (std::ostream& o, COMMIT const& c)
 class REPO;
 
 class CONFIG {
-public: // types	
+public: // types
 	class ITEM {
 	public:
 		explicit ITEM(git_config_entry* e, git_config_iterator* p, CONFIG& c)
@@ -279,7 +303,7 @@ std::ostream& operator<< (std::ostream& o, CONFIG::ITEM const& c)
 }
 
 class COMMITS {
-public: // types	
+public: // types
 	class COMMIT_WALKER {
 	public:
 		COMMIT_WALKER(COMMITS& c): _c(&c){
@@ -292,7 +316,7 @@ public: // types
 
 		COMMIT_WALKER& operator++(){
 			assert(!git_oid_iszero(&_id));
-			if (git_revwalk_next(&_id, _c->_walk)) {
+			if (!_c->_walk || git_revwalk_next(&_id, _c->_walk)) {
 				std::fill((char*)&_id, (char*)(&_id)+sizeof(git_oid), 0);
 			}else{
 			}
@@ -315,6 +339,10 @@ public: // construct
 	~COMMITS(){
 		git_revwalk_free(_walk);
 	}
+
+public: // misc
+	COMMIT create(std::string const& message);
+
 
 public: // iterate
 	COMMIT_WALKER begin(){
@@ -339,10 +367,10 @@ public:
 	};
 
 public:
-	REPO(create_t){
-		if(!git_repository_open(&_repo, ".")){
+	REPO(create_t, std::string path="."){
+		if(!git_repository_open(&_repo, path.c_str())){
 			throw EXCEPTION("already there. doesn't work");
-		}else if(int err=git_repository_init(&_repo, ".", 0)){
+		}else if(int err=git_repository_init(&_repo, path.c_str(), 0)){
 			throw EXCEPTION("internal error creating repo: " + std::to_string(err));
 		}else{
 		}
@@ -351,13 +379,8 @@ public:
 	REPO(std::string path=".") : _repo(nullptr) {
 		git_libgit2_init();
 
-		if(path!="."){ untested();
-			incomplete();
-		}else{
-		}
-
-		int error=git_repository_open(&_repo, ".");
-		if (error < 0) { untested();
+		int error=git_repository_open(&_repo, path.c_str());
+		if (error < 0) {
 			const git_error *e = giterr_last();
 			throw EXCEPTION_CANT_FIND(
 			          " repository (" + std::string(e->message) + ", "
@@ -389,6 +412,55 @@ public:
 	friend class BRANCHES;
 }; // REPO
 
+COMMIT COMMITS::create(std::string const& msg)
+{
+	git_signature* sig=nullptr;
+	git_index* index=nullptr;
+	git_oid tree_id;
+	const git_oid* parent_id;
+	git_oid oid;
+	git_tree* tree=nullptr;
+	int err=0;
+	std::string errstring;
+	git_repository* r(_repo._repo);
+	char const* m=msg.c_str();
+
+	git_commit* parent=nullptr;
+	int parents=0;
+	git_reference* pr;
+	if(!git_repository_head(&pr, _repo._repo)){
+		parent_id = git_reference_target(pr);
+		if(!git_commit_lookup(&parent, r, parent_id)){
+			parents = 1;
+		}else{ untested();
+		}
+	}else{
+		// ignore. perhaps empty repository
+	}
+
+
+	if ((err=git_signature_default(&sig, r)) < 0) {
+	}else if ((err=git_repository_index(&index, r)) < 0) {
+	}else if ((err=git_index_write_tree(&tree_id, index)) < 0) {
+	}else if ((err=git_tree_lookup(&tree, r, &tree_id)) < 0) {
+	}else if ((err=git_commit_create_v(&oid, r, "HEAD", sig, sig,
+				                          NULL, m, tree, parents, parent)) < 0)
+	{
+	}else{
+	}
+
+	git_index_free(index);
+	git_tree_free(tree);
+	git_signature_free(sig);
+
+	if(err<0){
+		errstring = std::string(giterr_last()->message);
+		throw EXCEPTION(errstring + ": " + std::to_string(err));
+	}else{
+		return COMMIT(oid, r);
+	}
+}
+
 class BRANCH{
 public:
 	explicit BRANCH(git_reference* ref):_ref(ref){}
@@ -402,7 +474,7 @@ public:
 	}
 	std::ostream& print(std::ostream& o) const{
 		return o << name();
-	}	
+	}
 
 	//BRANCH& reset(COMMIT&){
 	//	incomplete();
@@ -429,7 +501,7 @@ public:
 
 			operator++();
 		}
-		explicit iterator(BRANCHES& b, int): _br(b), _e(nullptr){
+		explicit iterator(BRANCHES& b, int): _i(nullptr),  _br(b), _e(nullptr){
 		}
 		iterator(iterator const& b): _i(b._i), _br(b._br), _e(b._e){
 		}
@@ -542,13 +614,18 @@ inline COMMITS::COMMITS(REPO& r)
 	int error;
 	git_object *obj;
 
-	if ((error = git_revparse_single(&obj, _repo._repo, "HEAD")) < 0)
-		throw error;
+	if ((error = git_revparse_single(&obj, _repo._repo, "HEAD")) < 0){
+		// cannot resolve HEAD.
+		_walk = nullptr;
+	}else{
 
-	error = git_revwalk_push(_walk, git_object_id(obj));
-	git_object_free(obj);
-	if(error) throw error;
-
+		error = git_revwalk_push(_walk, git_object_id(obj));
+		git_object_free(obj);
+		if(error){ untested();
+			throw error;
+		}else{
+		}
+	}
 }
 
 inline COMMIT COMMITS::COMMIT_WALKER::operator*()

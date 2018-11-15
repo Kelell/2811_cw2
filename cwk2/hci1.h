@@ -1,6 +1,19 @@
 // framework for 2811 (User Interfaces)
 // Author: Felix Salfelder
 // (c) 2018 School of Computing, Leeds
+//
+// ChangeLog
+//
+// hci0.h
+// ======
+// - initial release
+//
+// hci1.h
+// ======
+// - HCI_MENU::purge
+// - HCI_UP, name set to "up"
+// - MENU: leave, if UP is caught
+//
 #ifndef HCI_H
 #define HCI_H
 
@@ -17,7 +30,6 @@
 #define noexcept throw()
 #endif
 
-// #include "trace.h"
 #define untested()
 #define incomplete() ( \
     std::cerr << "@@#\n@@@\nincomplete:" \
@@ -25,6 +37,7 @@
 #define unreachable() ( \
     std::cerr << "@@#\n@@@\nunreachable:" \
               << __FILE__ << ":" << __LINE__ << ":" << __func__ << "\n" )
+// #include "trace.h"
 
 /* -------------------------------------------------------------------------- */
 class HCI_EXCEPTION : public std::exception{
@@ -52,6 +65,7 @@ public:
 class HCI {
 protected:
 	HCI(std::string const& n="unnamed") : _name(n){ }
+public:
 	virtual ~HCI(){ }
 protected:
 	virtual void show(){
@@ -149,7 +163,7 @@ private:
 // do things
 class HCI_ACTION : public HCI{
 public:
-	explicit HCI_ACTION(std::string const& s="action") 
+	explicit HCI_ACTION(std::string const& s="action")
 		: HCI(s) {}
 public:
 	virtual void do_it()=0;
@@ -161,7 +175,7 @@ public:
 	HCI_QUIT() : HCI_ACTION("quit") {}
 private:
 	void do_it(){
-		out() << " goodbye\n";
+		out() << " Goodbye\n";
 		sleep(1);
 		exit(0);
 	}
@@ -195,7 +209,7 @@ public:
 		show();
 		// set_status(std::string("showing ") + name() + ". Hit any key");
 		pause();
-		throw(HCI_LEAVE());
+		throw HCI_LEAVE();
 	}
 	void pause(){ untested();
 		getkey();
@@ -239,6 +253,9 @@ public:
 		// emplace?
 		_m[c] = o;
 	}
+	void purge(){
+		_m.clear();
+	}
 	void help(){}
 	void show(){
 		for(map_type::const_iterator i=_m.begin(); i!=_m.end(); ++i){
@@ -255,7 +272,7 @@ public:
 private:
 	void exec(HCI* h){
 		// See Stroustrup 15.4.5
-		if(HCI_ACTION* a=dynamic_cast<HCI_ACTION*>(h)){ untested();
+		if(HCI_ACTION* a=dynamic_cast<HCI_ACTION*>(h)){
 			a->do_it();
 		}else if(HCI_MENU* m=dynamic_cast<HCI_MENU*>(h)){ untested();
 			// submenu?
@@ -277,6 +294,9 @@ private:
 }; // HCI_MENU
 
 class HCI_UP : public HCI_ACTION{
+public:
+	explicit HCI_UP() : HCI_ACTION("up") { untested(); }
+private:
 	void do_it(){ untested();
 		throw *this;
 	}
@@ -348,6 +368,8 @@ inline void HCI_MENU::enter()
 			break;
 		}catch (HCI_LEAVE const&){
 			continue;
+		}catch (HCI_UP const&){
+			throw HCI_LEAVE();
 		}
 	}
 }

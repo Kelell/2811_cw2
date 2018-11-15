@@ -4,12 +4,12 @@
 # https://www.gnu.org/software/make/manual/html_node/Catalogue-of-Rules.html
 # no reason to copy them.
 
-CPPFLAGS=-DTRACE_UNTESTED
+CPPFLAGS=-DTRACE_UNTESTED -std=c++11
 CXXFLAGS=-std=c++11 -Wall -pedantic
 
 GIT_HCI_PROGRAMS = main
-HCI_H = hci0.h
-GITPP_H = gitpp1.h
+HCI_H = hci1.h
+GITPP_H = gitpp5.h
 
 HCI_PROGRAMS = ${GIT_HCI_PROGRAMS}
 GIT_PROGRAMS = ${GIT_HCI_PROGRAMS}

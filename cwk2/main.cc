@@ -1,4 +1,5 @@
-#include "hci0.h"
+#include "hci1.h"
+#include "gitpp5.h"
 
 class LIST_PAGE : public HCI_PAGE{
 	using HCI_PAGE::HCI_PAGE;
@@ -23,6 +24,8 @@ public: // overrides
 		out() << "list commits\n";
 	}
 };
+
+
 
 class SUB_MENU : public HCI_MENU {
 public:
@@ -59,12 +62,50 @@ private:
 };
 
 
+class REPOS : public HCI_APPLICATION{
+public:
+	REPOS() : HCI_APPLICATION(), _main_menu(*this) {
+	}
+public:
+	void show(){
+		try{
+			_main_menu.enter();
+		}catch(HCI_ESCAPE const&){
+			// somebody pressed esc. exiting.
+		}
+	}
+
+private:
+	SUB_MENU _main_menu;
+}; // HELLO
+
+class HCI_MAKE : public HCI_ACTION{
+public:
+	HCI_MAKE() : HCI_ACTION("yes"){
+
+	}
+private:
+	void do_it(){
+		std::string path=".";
+	try{
+		GITPP::REPO r(path.c_str());
+	}catch(GITPP::EXCEPTION_CANT_FIND const&){
+		GITPP::REPO r(GITPP::REPO::_create, path.c_str());
+	}
+	GITPP::REPO r(path.c_str());
+
+		REPOS _mainmenu;
+		_mainmenu.exec();
+	}
+
+};
+
 class REPOSITORY_MENU : public HCI_MENU {
 public:
 	explicit REPOSITORY_MENU(HCI_APPLICATION& ctx)
-	    : HCI_MENU(ctx, "n no,") , _submenu(ctx){
+	    : HCI_MENU(ctx, "n no,"){
 		add(0x1b, &hci_esc);
-		add('y', &_submenu);
+		add('y', &_make);
 		add('n', &hci_quit);
 	}
 
@@ -85,14 +126,15 @@ public:
 		}
 	}
 private:
-	SUB_MENU _submenu;
+	HCI_MAKE _make;
 };
 
 
 
-class REPOS : public HCI_APPLICATION{
+
+class INITIAL : public HCI_APPLICATION{
 public:
-	REPOS() : HCI_APPLICATION(), _main_menu(*this) {
+	INITIAL() : HCI_APPLICATION(), _main_menu(*this) {
 	}
 public:
 	void show(){
@@ -110,6 +152,14 @@ private:
 // the program starts here.
 int main(int argc, char const *argv[])
 {
+
+	try{
+		GITPP::REPO r;
+	}
+	catch(GITPP::EXCEPTION const&){
+		INITIAL init;
+		return init.exec();
+	}
 	REPOS repos;
 	return repos.exec();
 }
