@@ -5,10 +5,10 @@ class LIST_PAGE : public HCI_PAGE{
 	using HCI_PAGE::HCI_PAGE;
 public: // overrides
 	void show(){
-		out() << " list config\n";
+		out() << "list config\n\n";
 		GITPP::REPO r;
-		for(auto i : r.commits()){
-		std::cout << i << " " << i.signature().name() << "\n";
+		for(auto i : r.config()){
+		std::cout << i.name() << "\n";
 	}
 	}
 };
@@ -17,7 +17,12 @@ class CONFIG_PAGE : public HCI_PAGE{
 	using HCI_PAGE::HCI_PAGE;
 public: // overrides
 	void show(){
-		out() << "configure repository\n";
+		GITPP::REPO r;
+		auto c=r.config();
+		out() << "configure repository\n\n";
+		GITPP::CONFIG::ITEM N=c["user.name"];
+		out() << "Name:  " << N.value() << "\n";
+
 	}
 };
 
@@ -25,7 +30,7 @@ class COMMITS_PAGE : public HCI_PAGE{
 	using HCI_PAGE::HCI_PAGE;
 public: // overrides
 	void show(){
-		out() << "list commits\n";
+		out() << "list commits\n\n";
 		GITPP::REPO r;
 		for(auto i : r.commits()){
 			std::cout << i << " " << i.signature().name() << "\n";
