@@ -5,7 +5,11 @@ class LIST_PAGE : public HCI_PAGE{
 	using HCI_PAGE::HCI_PAGE;
 public: // overrides
 	void show(){
-		out() << "list config\n";
+		out() << " list config\n";
+		GITPP::REPO r;
+		for(auto i : r.commits()){
+		std::cout << i << " " << i.signature().name() << "\n";
+	}
 	}
 };
 
@@ -22,45 +26,12 @@ class COMMITS_PAGE : public HCI_PAGE{
 public: // overrides
 	void show(){
 		out() << "list commits\n";
-	}
-};
-
-
-
-class SUB_MENU : public HCI_MENU {
-public:
-	explicit SUB_MENU(HCI_APPLICATION& ctx)
-	    : HCI_MENU(ctx, "submenu"), _page("list config"),
-			_page2("configure repository"), _page3("list commits"){
-		add(0x1b, &hci_esc);
-		add('c', &_page);
-		add('e', &_page2);
-		add('l', &_page3);
-		add('q', &hci_quit);
-	}
-
-
-public:
-	void show(){
-		out() << "Your git repository\n\n";
-		HCI_MENU::show();
-	}
-	void enter(){
-		while(true){
-			try{
-				HCI_MENU::enter();
-				break;
-			}catch( HCI_UP const&){
-				continue;
-			}
+		GITPP::REPO r;
+		for(auto i : r.commits()){
+			std::cout << i << " " << i.signature().name() << "\n";
 		}
 	}
-private:
-	LIST_PAGE _page;
-	CONFIG_PAGE _page2;
-	COMMITS_PAGE _page3;
 };
-
 
 class REPOS : public HCI_APPLICATION{
 public:
@@ -75,6 +46,42 @@ public:
 		}
 	}
 
+	class SUB_MENU : public HCI_MENU {
+	public:
+		explicit SUB_MENU(HCI_APPLICATION& ctx)
+		    : HCI_MENU(ctx, "submenu"), _page("list config"),
+				_page2("configure repository"), _page3("list commits"){
+			add(0x1b, &hci_esc);
+			add('c', &_page);
+			add('e', &_page2);
+			add('l', &_page3);
+			add('q', &hci_quit);
+		}
+
+
+	public:
+		void show(){
+			out() << "Your git repository\n\n";
+			HCI_MENU::show();
+		}
+		void enter(){
+			while(true){
+				try{
+					HCI_MENU::enter();
+					break;
+				}catch( HCI_UP const&){
+					continue;
+				}
+			}
+		}
+	private:
+		LIST_PAGE _page;
+		CONFIG_PAGE _page2;
+		COMMITS_PAGE _page3;
+	};
+
+
+
 private:
 	SUB_MENU _main_menu;
 }; // HELLO
@@ -87,18 +94,20 @@ public:
 private:
 	void do_it(){
 		std::string path=".";
-	try{
-		GITPP::REPO r(path.c_str());
-	}catch(GITPP::EXCEPTION_CANT_FIND const&){
-		GITPP::REPO r(GITPP::REPO::_create, path.c_str());
-	}
+try{
 	GITPP::REPO r(path.c_str());
+}catch(GITPP::EXCEPTION_CANT_FIND const&){
+	GITPP::REPO r(GITPP::REPO::_create, path.c_str());
+}
 
-		REPOS _mainmenu;
+GITPP::REPO r(path.c_str());
+
+r.commits().create("test created from git_create.cc");
+REPOS _mainmenu;
 		_mainmenu.exec();
 	}
-
 };
+
 
 class REPOSITORY_MENU : public HCI_MENU {
 public:
@@ -112,8 +121,10 @@ public:
 
 public:
 	void show(){
+		out() << "... <title line> ...\n\n";
 		out() << "create new empty repository?\n\n";
 		HCI_MENU::show();
+		out() << "\n... <status line> ...\n";
 	}
 	void enter(){
 		while(true){
