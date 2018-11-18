@@ -25,4 +25,5 @@ C++ better, the pages are now implemented with functions.
 *main.cc - Imported the <string> library to change config settings rather than
 using dynamic arrays.
 
-  
+2018-11-18  Kelell Davison-Thomas  <ll16kdt@leeds.ac.uk>
+Deleted the folders I wasn't using from the repository before submitting.
