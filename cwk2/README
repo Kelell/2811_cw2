@@ -1,32 +1,28 @@
-== example
+README
 
-This program prints the letters H, e, l, ... l, d, \n to the standard output,
-then quits. Read in order, the letters form a greeting. The purpose of this
-program is to provide a working example for the structure of an assignment
-submission. Submissions enclose
+This program implements a command-line based user interface that controls git.
+By using various menus the user should be able to perform the following tasks:
 
-- a README file
-- some source code
-- a Makefile
+  1) List the current configuration settings of the repository.
+  2) Allow you to change the current configurations of the repository (although
+  outside of your name and e-mail, I'm not sure what else the user would want
+  to change).
+  3) List the commits and branches of the the repository (currently unable to
+  list the branches, so only the commits are listed.)
 
-and must work on the compsoc machines.
+I have been giving the hci and gitpp header files and have been advised to
+used the functionality implemented by these header files.
 
-== Build instructions etc.
+CHANGELOG
+2018-11-12  Kelell Davison-Thomas  <ll16kdt@leeds.ac.uk>
+Project created.
 
-Type
+2018-11-15  Kelell Davison-Thomas  <ll16kdt@leeds.ac.uk>
+*main.cc - Changed the apporach of the project to reflected the OO nature of
+C++ better, the pages are now implemented with functions.
 
-$ make
+2018-11-18  Kelell Davison-Thomas  <ll16kdt@leeds.ac.uk>
+*main.cc - Imported the <string> library to change config settings rather than
+using dynamic arrays.
 
-in the directory containting this README file. This will create a new file
-containing the java byte code. The command
-
-$ ls -lt
-
-will list all files contained in this directory, ordered by modification time.
-note the newly created file "example".
-
-== Usage
-
-Run the program with
-
-$ ./example
+  
