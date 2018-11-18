@@ -1,5 +1,8 @@
-#include "hci1.h"
+##include "hci1.h"
 #include "gitpp5.h"
+#include <string>
+using namespace std;
+
 
 class LIST_PAGE : public HCI_PAGE{
 	using HCI_PAGE::HCI_PAGE;
@@ -8,7 +11,7 @@ public: // overrides
 		out() << "list config\n\n";
 		GITPP::REPO r;
 		for(auto i : r.config()){
-		std::cout << i.name() << "\n";
+		std::cout << i.name()<<": " << i.value() << "\n";
 	}
 	}
 };
@@ -18,10 +21,22 @@ class CONFIG_PAGE : public HCI_PAGE{
 public: // overrides
 	void show(){
 		GITPP::REPO r;
+		string input;
 		auto c=r.config();
 		out() << "configure repository\n\n";
+		//assign a new name
+		out() << "Enter the new name\n\n";
+		in() >> input;
+		c["user.name"]= input;
 		GITPP::CONFIG::ITEM N=c["user.name"];
-		out() << "Name:  " << N.value() << "\n";
+		out() << "New name is:  " << N.value() << "\n";
+		//assign a new e-mail
+		out() << "Enter the new e-mail\n\n";
+		in() >> input;
+		c["user.email"]= input;
+		GITPP::CONFIG::ITEM E=c["user.email"];
+		out() << "New name is:  " << E.value() << "\n";
+
 
 	}
 };
@@ -129,7 +144,6 @@ public:
 		out() << "... <title line> ...\n\n";
 		out() << "create new empty repository?\n\n";
 		HCI_MENU::show();
-		out() << "\n... <status line> ...\n";
 	}
 	void enter(){
 		while(true){
