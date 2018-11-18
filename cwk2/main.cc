@@ -58,7 +58,10 @@ public: // overrides
 	void show(){
 		out() << "list commits\n\n";
 		GITPP::REPO r;
+<<<<<<< HEAD
 		//Iterate through the list of commits and print them
+=======
+>>>>>>> 1a22e6f8bcf1284ce0718e8522c134d4cc25d547
 		for(auto i : r.commits()){
 			std::cout << i << " " << i.signature().name() << "\n";
 		}
