@@ -1,4 +1,4 @@
-##include "hci1.h"
+#include "hci1.h"
 #include "gitpp5.h"
 #include <string>
 using namespace std;
@@ -9,10 +9,21 @@ class LIST_PAGE : public HCI_PAGE{
 public: // overrides
 	void show(){
 		out() << "list config\n\n";
+		//list all the configuration values
 		GITPP::REPO r;
-		for(auto i : r.config()){
-		std::cout << i.name()<<": " << i.value() << "\n";
-	}
+		auto c=r.config();
+		GITPP::CONFIG::ITEM N=c["user.name"];
+		out() << "Name: " << N.value() << "\n";
+		GITPP::CONFIG::ITEM E=c["user.email"];
+		out() << "Your E-mail: " << E.value() << "\n\n";
+		GITPP::CONFIG::ITEM R=c["core.repositoryformatversion"];
+		out() << "Repository Format Version: " << R.value() << "\n";
+		GITPP::CONFIG::ITEM B=c["core.bare"];
+		out() << "Bare?: " << B.value() << "\n";
+		GITPP::CONFIG::ITEM F=c["core.filemode"];
+		out() << "Filemode?: " << F.value() << "\n";
+		GITPP::CONFIG::ITEM L=c["core.logallrefupdates"];
+		out() << "Log all Ref Updates?: " << L.value() << "\n";
 	}
 };
 
